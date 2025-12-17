@@ -1,0 +1,57 @@
+name: Mod Report
+description: Report an issue with a listed mod (broken, malicious, abandoned, etc.)
+title: "[Report] "
+labels: ["mod-report"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form to report issues with mods listed in the registry.
+
+  - type: input
+    id: mod-name
+    attributes:
+      label: Mod Name
+      description: The name of the mod you're reporting
+      placeholder: "Enhanced Minimap"
+    validations:
+      required: true
+
+  - type: input
+    id: github-repo
+    attributes:
+      label: GitHub Repository
+      description: The mod's repository in "owner/repo" format
+      placeholder: "MapMaster/enhanced-minimap"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: issue-type
+    attributes:
+      label: Issue Type
+      description: What kind of issue are you reporting?
+      options:
+        - Broken / Doesn't work
+        - Installation fails
+        - Malicious / Suspicious
+        - Abandoned / Unmaintained
+        - Incorrect information in registry
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Please describe the issue in detail
+      placeholder: "The mod fails to install because..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Any error messages, screenshots, or other evidence

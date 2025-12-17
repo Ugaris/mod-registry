@@ -1,0 +1,108 @@
+name: Mod Submission
+description: Submit your mod to be added to the Ugaris mod registry
+title: "[Mod Submission] "
+labels: ["mod-submission"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for submitting your mod to the Ugaris registry! Please fill out the information below.
+
+        **Before submitting, ensure:**
+        - Your repository is public
+        - You have a valid `mod.json` in the repository root
+        - For native mods: source code is available and builds are generated via GitHub Actions
+        - Your mod installs correctly via URL in the launcher
+
+  - type: input
+    id: github-repo
+    attributes:
+      label: GitHub Repository
+      description: Your repository in "owner/repo" format
+      placeholder: "YourUsername/your-mod-name"
+    validations:
+      required: true
+
+  - type: input
+    id: mod-name
+    attributes:
+      label: Mod Name
+      description: The display name for your mod
+      placeholder: "My Awesome Mod"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: A brief description of what your mod does (1-2 sentences)
+      placeholder: "This mod adds..."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      description: Select the primary category for your mod
+      options:
+        - utility - Utilities
+        - ui - UI Enhancements
+        - gameplay - Gameplay
+        - visual - Visual
+        - automation - Automation
+        - social - Social
+    validations:
+      required: true
+
+  - type: dropdown
+    id: mod-type
+    attributes:
+      label: Mod Type
+      description: What type of mod is this?
+      options:
+        - Native (DLL/dylib/so)
+        - Lua
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: platforms
+    attributes:
+      label: Supported Platforms
+      description: Which platforms does your mod support?
+      options:
+        - label: Windows
+        - label: macOS
+        - label: Linux
+
+  - type: input
+    id: tags
+    attributes:
+      label: Tags
+      description: Comma-separated tags for searchability
+      placeholder: "ui, minimap, navigation"
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Pre-submission Checklist
+      description: Please confirm the following
+      options:
+        - label: My repository is public
+          required: true
+        - label: I have a valid mod.json in the repository root
+          required: true
+        - label: "**For native mods:** Full source code is available in the repository"
+        - label: "**For native mods:** Binaries are built via GitHub Actions (not manually uploaded)"
+        - label: I have tested that my mod installs via URL in the launcher
+          required: true
+        - label: My mod works as described
+          required: true
+
+  - type: textarea
+    id: additional-notes
+    attributes:
+      label: Additional Notes
+      description: Any other information you'd like to share (platform limitations, dependencies, etc.)
