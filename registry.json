@@ -1,8 +1,38 @@
 {
   "version": 1,
-  "lastUpdated": "2025-12-17T00:00:00Z",
-  "mods": [],
+  "lastUpdated": "2025-12-19T00:00:00Z",
+  "mods": [
+    {
+      "id": "Ugaris/c-demo-mod",
+      "name": "C Demo Mod",
+      "description": "A simple native C mod demonstrating the Ugaris Client mod API. Shows basic commands, rendering, and game data access.",
+      "category": "demo",
+      "featured": false
+    },
+    {
+      "id": "Ugaris/cpp-demo-mod",
+      "name": "C++ Demo Mod",
+      "description": "A native mod written in modern C++ (C++17) demonstrating the Ugaris Client mod API with classes, RAII, and type safety.",
+      "category": "demo",
+      "featured": false
+    },
+    {
+      "id": "Ugaris/rust-demo-mod",
+      "name": "Rust Demo Mod",
+      "description": "A native mod written in Rust demonstrating the Ugaris Client mod API with memory safety and zero-cost abstractions.",
+      "category": "demo",
+      "featured": false
+    },
+    {
+      "id": "Ugaris/zig-demo-mod",
+      "name": "Zig Demo Mod",
+      "description": "A native mod written in Zig demonstrating the Ugaris Client mod API with Zig's safety, performance, and excellent cross-compilation.",
+      "category": "demo",
+      "featured": false
+    }
+  ],
   "categories": [
+    { "id": "demo", "name": "Demo & Examples" },
     { "id": "utility", "name": "Utilities" },
     { "id": "ui", "name": "UI Enhancements" },
     { "id": "gameplay", "name": "Gameplay" },
