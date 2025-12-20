@@ -254,7 +254,7 @@ jobs:
           - os: macos-latest
             artifact: bmod.dylib
             platform: macos
-          - os: ubuntu-20.04
+          - os: ubuntu-latest
             artifact: bmod.so
             platform: linux
 
