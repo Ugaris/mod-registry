@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "lastUpdated": "2026-08-30T08:00:00Z",
+  "lastUpdated": "2026-08-30T12:00:00Z",
   "mods": [
     {
       "id": "Ugaris/tracker-mod",
@@ -61,6 +61,34 @@
         "planning",
         "exp",
         "raise-cost"
+      ]
+    },
+    {
+      "id": "Ugaris/combat-text-mod",
+      "name": "Combat Text",
+      "description": "Floating combat numbers: exact HP/mana changes over your character, health percentages over everything you fight, and a live list of your active buffs and debuffs.",
+      "author": "Ugaris Team",
+      "category": "visual",
+      "featured": true,
+      "verified": true,
+      "tags": [
+        "combat",
+        "damage",
+        "effects",
+        "floating-text"
+      ]
+    },
+    {
+      "id": "Ugaris/notebook-mod",
+      "name": "Notebook",
+      "description": "In-game notes, kept per character: #note jots something down, #notes opens the notebook. Plain-text files you can edit outside the game too.",
+      "author": "Ugaris Team",
+      "category": "utility",
+      "featured": false,
+      "verified": true,
+      "tags": [
+        "notes",
+        "quality-of-life"
       ]
     },
     {
