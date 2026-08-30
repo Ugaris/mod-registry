@@ -1,0 +1,27 @@
+name: Validate Registry
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    # Weekly health check: catches mods whose repos, manifests, or release
+    # assets have vanished since they were listed.
+    - cron: '17 6 * * 1'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Structure check
+        run: node scripts/validate-registry.mjs
+
+      - name: Live check (every mod installable)
+        run: node scripts/validate-registry.mjs --live

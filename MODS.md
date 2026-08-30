@@ -60,7 +60,11 @@ These files are placed in the same directory as the game executable.
 
 **How enable/disable works:** The launcher renames disabled mods by appending `.disabled` (e.g., `bmod.dll.disabled`).
 
-### Lua Mods
+### Lua Mods (legacy - not loaded by the current client)
+
+> **The current Ugaris client does not execute Lua mods.** The manifest
+> format and launcher install path below are kept for compatibility with the
+> older client that did. New mods should be native libraries.
 
 Lua mods are script-based and reside in a `mods/` folder:
 
@@ -77,6 +81,20 @@ Lua mods are **inherently cross-platform** - the same scripts work on all operat
 **How enable/disable works:** A `.disabled` marker file is created in the mod folder.
 
 ---
+
+## Linking against the client
+
+Mods call functions and read variables exported by the game executable.
+How that resolves differs per platform:
+
+| Platform | Mechanism |
+|----------|-----------|
+| Linux | The client is linked `-rdynamic`; the dynamic loader resolves your undefined symbols at load time. Link with `-Wl,--allow-shlib-undefined`. |
+| macOS | Same idea; link with `-undefined dynamic_lookup`. |
+| **Windows** | **You must link the client's import library.** Download `mod-sdk.zip` from an [astonia_community_client release](https://github.com/eddoww/astonia_community_client/releases), copy `lib/moac.a` (MinGW) / `lib/moac.lib` (MSVC) into your project, and link it. A DLL built with `/FORCE:UNRESOLVED` instead will load but **crashes the game** on the first client API call - there is no runtime symbol fixup on Windows. |
+
+The `mod-sdk.zip` also contains the authoritative API headers
+(`amod/amod.h`, `amod/amod_structs.h`, `astonia.h`, `dll.h`).
 
 ## Cross-Platform Development
 
@@ -262,6 +280,16 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Fetch client import library (Windows)
+        if: matrix.platform == 'windows'
+        shell: bash
+        run: |
+          # Required: Windows mods link against the client's import library
+          curl -fsSL -o mod-sdk.zip \
+            "https://github.com/eddoww/astonia_community_client/releases/latest/download/mod-sdk.zip"
+          unzip -oq mod-sdk.zip
+          mkdir -p lib && cp mod-sdk/lib/moac.a mod-sdk/lib/moac.lib lib/
 
       - name: Build (Windows)
         if: matrix.platform == 'windows'

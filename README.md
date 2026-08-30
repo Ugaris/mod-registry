@@ -11,10 +11,10 @@ The **Ugaris Client** (the game) runs on **Windows**, **macOS**, and **Linux**. 
 Mods listed in this registry can be installed directly from the Ugaris Launcher:
 
 1. Open the Ugaris Launcher
-2. Go to **Options > Developer > Enable Mod Manager**
-3. Navigate to the **Mods** section
-4. Browse the **Available** tab to discover mods
-5. Click **Install** on any mod you want
+2. Open the **Mods** view (shown by default; **Options > Launcher > Mods**
+   toggles the button)
+3. Browse the **Browse** tab to discover mods
+4. Click **Install** on any mod you want
 
 The launcher will automatically download the correct version for your operating system.
 
@@ -56,16 +56,25 @@ The Ugaris Client runs on three platforms. Native mods should support:
 
 **Mod slots:** Native mods use slots `bmod`, `cmod`, `dmod`, `emod`, `fmod`. The `amod` slot is reserved for system use. The launcher may rename your mod file to an available slot when installing multiple mods.
 
-Lua mods are inherently cross-platform and require no special handling.
+> **Note:** the current Ugaris client only loads native mods. Lua mod
+> support existed in an older client and is kept in the manifest format for
+> compatibility, but Lua mods are not executed by today's client.
 
 ## Registry Structure
 
 ```
 mod-registry/
-├── registry.json     # The main registry file
-├── README.md         # This file
-└── MODS.md          # Detailed mod authoring guide
+├── registry.json                        # The main registry file
+├── README.md                            # This file
+├── MODS.md                              # Detailed mod authoring guide
+├── scripts/validate-registry.mjs        # CI validation (structure + live installability)
+└── .github/workflows/validate.yml       # Runs the validation on PRs, pushes and weekly
 ```
+
+Every pull request and push is validated: the registry structure is checked,
+and every listed mod's `mod.json` and release files are fetched exactly the
+way the launcher fetches them. A weekly run catches mods whose releases
+disappear after listing.
 
 ## Registry Schema
 
@@ -82,11 +91,11 @@ The `registry.json` file contains:
 
 | Field | Required | Description |
 |-------|----------|-------------|
-| `id` | Yes | Unique identifier (usually "owner/repo") |
+| `id` | Yes | The mod's GitHub repository as "owner/repo" (this is what the launcher installs from) |
 | `name` | Yes | Display name |
 | `description` | No | Short description |
 | `author` | No | Author name |
-| `githubRepo` | Yes | GitHub repo in "owner/repo" format |
+| `githubRepo` | No | Overrides `id` as the repository if they differ (rarely needed) |
 | `category` | No | Primary category ID |
 | `featured` | No | Show in featured section |
 | `verified` | No | Shows "Verified" badge |
@@ -94,6 +103,7 @@ The `registry.json` file contains:
 
 ### Available Categories
 
+- `demo` - Demo & Examples
 - `utility` - Utilities
 - `ui` - UI Enhancements
 - `gameplay` - Gameplay
