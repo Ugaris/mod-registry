@@ -54,11 +54,20 @@ The Ugaris Client runs on three platforms. Native mods should support:
 | macOS | `.dylib` | x86_64, arm64 |
 | Linux | `.so` | x86_64 |
 
-**Mod slots:** Native mods use slots `bmod`, `cmod`, `dmod`, `emod`, `fmod`. The `amod` slot is reserved for system use. The launcher may rename your mod file to an available slot when installing multiple mods.
+**Where mods live:** every mod is one folder under the player's user directory
+(`<userdir>/mods/<id>/`), holding a `mod.json` plus your library and/or `.lua`
+scripts. **The library filename is yours to choose** — nothing is renamed on
+install, there are no `amod`..`fmod` slots any more, and no limit on how many
+mods a player can have. If you ship more than one library for a platform, add
+`"entry"` to your `mod.json` naming your own.
 
-> **Note:** the current Ugaris client only loads native mods. Lua mod
-> support existed in an older client and is kept in the manifest format for
-> compatibility, but Lua mods are not executed by today's client.
+`amod` remains the Ugaris system mod, but it is not a slot you can claim: it
+ships in the game depot at `bin/amod.<ext>` and is the only mod allowed to
+override client behaviour.
+
+> Both native and Lua mods are loaded by the current client. (Older launcher
+> versions installed Lua mods to a directory the client never read, which is
+> why they appeared not to work.)
 
 ## Registry Structure
 

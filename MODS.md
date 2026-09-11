@@ -35,50 +35,82 @@ The launcher can install mods directly from GitHub repositories. For this to wor
 
 ## Mod Types
 
+### Where mods live
+
+Every mod — native library, Lua scripts, or both — is **one folder** under the
+player's user directory:
+
+```
+<userdir>/mods/
+  mods.json                    # which mods are on, and in what order
+  Ugaris-tracker-mod/
+    mod.json                   # written by the launcher; required
+    tracker.so                 # any filename — one platform library per folder
+    data/...                   # your own files
+```
+
+`<userdir>` is `%APPDATA%\Astonia\` on Windows, `~/.local/share/Astonia/` on
+Linux and `~/Library/Application Support/Astonia/` on macOS — or whatever path
+the launcher passes the client as `--userdir`.
+
+**How enable/disable works:** the launcher writes `mods/mods.json`, which the
+client reads at startup:
+
+```json
+{ "version": 1, "mods": { "Ugaris-tracker-mod": { "enabled": false, "order": 100 } } }
+```
+
+Nothing is renamed on disk. Because the client never unloads a library, a
+toggle takes effect the **next time the game is launched**.
+
 ### Native/Dynamic Library Mods
 
-Native mods are dynamic libraries loaded by the game client at startup. The file extension depends on the platform:
+Native mods are dynamic libraries loaded by the game client at startup. The
+file extension depends on the platform:
 
 | Platform | Extension | Example |
 |----------|-----------|---------|
-| Windows | `.dll` | `bmod.dll` |
-| macOS | `.dylib` | `bmod.dylib` |
-| Linux | `.so` | `bmod.so` |
+| Windows | `.dll` | `mymod.dll` |
+| macOS | `.dylib` | `mymod.dylib` |
+| Linux | `.so` | `mymod.so` |
 
-Native mods use specific base filenames. The client loads libraries named:
+**The filename is yours to choose.** The client loads whatever library it finds
+in your mod's folder.
+
+> **The `amod`..`fmod` slots are gone.** Older versions of the client loaded
+> `bin/{a..f}mod.<ext>` next to the executable — six mods maximum, with the
+> launcher renaming your library onto a free slot. Nothing renames anything any
+> more, and there is no limit on how many mods a player can install. If your
+> build still emits `bmod.so`, it will install and load fine under that name;
+> renaming it to something meaningful is a courtesy to players browsing their
+> mods folder, not a requirement.
+
+**If you ship more than one library for a platform** — say your mod bundles a
+dependency — add `"entry"` to your `mod.json` naming your own library without
+its extension. The client will not guess which one is the mod, and the launcher
+refuses an install that would produce a folder it cannot load.
+
+`amod` is still special, but it is not a slot you can claim: the Ugaris system
+mod ships in the game depot at `bin/amod.<ext>` and is the only mod allowed to
+override client behaviour, claim the server's mod packets or replace the
+client's game data tables. Nothing installed under `mods/` can reach that.
+
+### Lua Mods
+
+Lua mods are script-based: an `init.lua` (loaded first) plus any other `*.lua`
+files, in exactly the same kind of mod folder as a native mod. A single mod may
+ship both a library and scripts.
 
 ```
-amod, bmod, cmod, dmod, emod, fmod
+<userdir>/mods/
+  YourModName/
+    mod.json
+    init.lua
+    other_files.lua
 ```
 
-**Important:**
-- **`amod` is reserved** for system use and should not be used by mods
-- Use `bmod`, `cmod`, `dmod`, `emod`, or `fmod` for your mod
-- **The launcher will rename your library file** to an available slot when installing. For example, if you distribute `bmod.dll` but that slot is taken, the launcher may install it as `cmod.dll` instead. This allows multiple mods to coexist.
-
-These files are placed in the same directory as the game executable.
-
-**How enable/disable works:** The launcher renames disabled mods by appending `.disabled` (e.g., `bmod.dll.disabled`).
-
-### Lua Mods (legacy - not loaded by the current client)
-
-> **The current Ugaris client does not execute Lua mods.** The manifest
-> format and launcher install path below are kept for compatibility with the
-> older client that did. New mods should be native libraries.
-
-Lua mods are script-based and reside in a `mods/` folder:
-
-```
-<game_directory>/
-└── mods/
-    └── YourModName/
-        ├── main.lua
-        └── other_files.lua
-```
-
-Lua mods are **inherently cross-platform** - the same scripts work on all operating systems.
-
-**How enable/disable works:** A `.disabled` marker file is created in the mod folder.
+Lua mods are **inherently cross-platform** - the same scripts work on all
+operating systems.
 
 ---
 
@@ -138,18 +170,18 @@ Your `mod.json` should list files for each platform:
   "type": "dll",
   "files": [
     {
-      "name": "bmod.dll",
-      "path": "releases/v1.0.0/windows/bmod.dll",
+      "name": "mymod.dll",
+      "path": "releases/v1.0.0/windows/mymod.dll",
       "platform": "windows"
     },
     {
-      "name": "bmod.dylib",
-      "path": "releases/v1.0.0/macos/bmod.dylib",
+      "name": "mymod.dylib",
+      "path": "releases/v1.0.0/macos/mymod.dylib",
       "platform": "macos"
     },
     {
-      "name": "bmod.so",
-      "path": "releases/v1.0.0/linux/bmod.so",
+      "name": "mymod.so",
+      "path": "releases/v1.0.0/linux/mymod.so",
       "platform": "linux"
     }
   ]
@@ -267,13 +299,13 @@ jobs:
       matrix:
         include:
           - os: windows-latest
-            artifact: bmod.dll
+            artifact: mymod.dll
             platform: windows
           - os: macos-latest
-            artifact: bmod.dylib
+            artifact: mymod.dylib
             platform: macos
           - os: ubuntu-latest
-            artifact: bmod.so
+            artifact: mymod.so
             platform: linux
 
     runs-on: ${{ matrix.os }}
@@ -296,7 +328,7 @@ jobs:
         run: |
           cmake -B build -DCMAKE_BUILD_TYPE=Release
           cmake --build build --config Release
-          cp build/Release/bmod.dll bmod.dll
+          cp build/Release/mymod.dll mymod.dll
 
       - name: Build (macOS)
         if: matrix.platform == 'macos'
@@ -304,14 +336,14 @@ jobs:
           cmake -B build -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"
           cmake --build build
-          cp build/bmod.dylib bmod.dylib
+          cp build/mymod.dylib mymod.dylib
 
       - name: Build (Linux)
         if: matrix.platform == 'linux'
         run: |
           cmake -B build -DCMAKE_BUILD_TYPE=Release
           cmake --build build
-          cp build/bmod.so bmod.so
+          cp build/mymod.so mymod.so
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -336,17 +368,17 @@ jobs:
       - name: Organize release files
         run: |
           mkdir -p release/windows release/macos release/linux
-          cp artifacts/windows/bmod.dll release/windows/
-          cp artifacts/macos/bmod.dylib release/macos/
-          cp artifacts/linux/bmod.so release/linux/
+          cp artifacts/windows/mymod.dll release/windows/
+          cp artifacts/macos/mymod.dylib release/macos/
+          cp artifacts/linux/mymod.so release/linux/
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            release/windows/bmod.dll
-            release/macos/bmod.dylib
-            release/linux/bmod.so
+            release/windows/mymod.dll
+            release/macos/mymod.dylib
+            release/linux/mymod.so
 ```
 
 ### How It Works
@@ -373,18 +405,18 @@ After the workflow creates a release, reference the files:
 {
   "files": [
     {
-      "name": "bmod.dll",
-      "path": "https://github.com/you/repo/releases/download/v1.0.0/bmod.dll",
+      "name": "mymod.dll",
+      "path": "https://github.com/you/repo/releases/download/v1.0.0/mymod.dll",
       "platform": "windows"
     },
     {
-      "name": "bmod.dylib",
-      "path": "https://github.com/you/repo/releases/download/v1.0.0/bmod.dylib",
+      "name": "mymod.dylib",
+      "path": "https://github.com/you/repo/releases/download/v1.0.0/mymod.dylib",
       "platform": "macos"
     },
     {
-      "name": "bmod.so",
-      "path": "https://github.com/you/repo/releases/download/v1.0.0/bmod.so",
+      "name": "mymod.so",
+      "path": "https://github.com/you/repo/releases/download/v1.0.0/mymod.so",
       "platform": "linux"
     }
   ]
@@ -410,17 +442,17 @@ jobs:
         include:
           - os: windows-latest
             target: x86_64-pc-windows-msvc
-            artifact: bmod.dll
+            artifact: mymod.dll
             platform: windows
           - os: macos-latest
             target: x86_64-apple-darwin
-            artifact: libbmod.dylib
-            output: bmod.dylib
+            artifact: libmymod.dylib
+            output: mymod.dylib
             platform: macos
           - os: ubuntu-20.04
             target: x86_64-unknown-linux-gnu
-            artifact: libbmod.so
-            output: bmod.so
+            artifact: libmymod.so
+            output: mymod.so
             platform: linux
 
     runs-on: ${{ matrix.os }}
@@ -466,18 +498,18 @@ The `mod.json` file tells the launcher everything it needs to know about your mo
   "type": "dll",
   "files": [
     {
-      "name": "bmod.dll",
-      "path": "https://github.com/you/repo/releases/download/v1.0.0/bmod.dll",
+      "name": "mymod.dll",
+      "path": "https://github.com/you/repo/releases/download/v1.0.0/mymod.dll",
       "platform": "windows"
     },
     {
-      "name": "bmod.dylib",
-      "path": "https://github.com/you/repo/releases/download/v1.0.0/bmod.dylib",
+      "name": "mymod.dylib",
+      "path": "https://github.com/you/repo/releases/download/v1.0.0/mymod.dylib",
       "platform": "macos"
     },
     {
-      "name": "bmod.so",
-      "path": "https://github.com/you/repo/releases/download/v1.0.0/bmod.so",
+      "name": "mymod.so",
+      "path": "https://github.com/you/repo/releases/download/v1.0.0/mymod.so",
       "platform": "linux"
     }
   ],
@@ -498,10 +530,11 @@ The `mod.json` file tells the launcher everything it needs to know about your mo
 | `authorUrl` | string | No | Link to your profile or website |
 | `type` | string | **Yes** | Either `"dll"` or `"lua"` |
 | `files` | array | **Yes** | List of files to download |
-| `files[].name` | string | **Yes** | Filename (e.g., "bmod.dll") |
+| `files[].name` | string | **Yes** | Filename it is installed as (e.g., "mymod.dll") — your choice |
 | `files[].path` | string | **Yes** | Path to file (repo path or release URL) |
 | `files[].platform` | string | No | Target platform: `"windows"`, `"macos"`, or `"linux"` |
-| `files[].targetPath` | string | No | Subdirectory in game folder (empty = game root) |
+| `files[].targetPath` | string | No | Subdirectory **inside your mod's folder** (empty = its root) |
+| `entry` | string | No | Which library is the mod, without extension. Required if you ship more than one for a platform |
 | `tags` | array | No | Category tags for filtering |
 | `homepage` | string | No | URL to mod's homepage or documentation |
 | `branch` | string | No | Git branch to use (default: "main") |
@@ -518,18 +551,18 @@ The `mod.json` file tells the launcher everything it needs to know about your mo
   "type": "dll",
   "files": [
     {
-      "name": "bmod.dll",
-      "path": "https://github.com/MapMaster/enhanced-minimap/releases/download/v2.1.0/bmod.dll",
+      "name": "mymod.dll",
+      "path": "https://github.com/MapMaster/enhanced-minimap/releases/download/v2.1.0/mymod.dll",
       "platform": "windows"
     },
     {
-      "name": "bmod.dylib",
-      "path": "https://github.com/MapMaster/enhanced-minimap/releases/download/v2.1.0/bmod.dylib",
+      "name": "mymod.dylib",
+      "path": "https://github.com/MapMaster/enhanced-minimap/releases/download/v2.1.0/mymod.dylib",
       "platform": "macos"
     },
     {
-      "name": "bmod.so",
-      "path": "https://github.com/MapMaster/enhanced-minimap/releases/download/v2.1.0/bmod.so",
+      "name": "mymod.so",
+      "path": "https://github.com/MapMaster/enhanced-minimap/releases/download/v2.1.0/mymod.so",
       "platform": "linux"
     }
   ],
@@ -663,7 +696,7 @@ Before (v1.0.0):
 {
   "version": "1.0.0",
   "files": [
-    { "path": "https://github.com/you/repo/releases/download/v1.0.0/bmod.dll", "platform": "windows" }
+    { "path": "https://github.com/you/repo/releases/download/v1.0.0/mymod.dll", "platform": "windows" }
   ]
 }
 ```
@@ -673,7 +706,7 @@ After (v1.1.0):
 {
   "version": "1.1.0",
   "files": [
-    { "path": "https://github.com/you/repo/releases/download/v1.1.0/bmod.dll", "platform": "windows" }
+    { "path": "https://github.com/you/repo/releases/download/v1.1.0/mymod.dll", "platform": "windows" }
   ]
 }
 ```
@@ -825,7 +858,10 @@ After your mod is added to the registry, you can request "Verified" status by de
 
 ### Mod installs but doesn't work
 
-- Ensure you're using the correct mod slot (amod - fmod)
+- Check `mods/mods.json` — the mod may be disabled (a toggle only takes
+  effect at the next launch)
+- If your folder holds more than one library for the platform, add `"entry"`
+  to `mod.json`: the client will not guess which one to load
 - Check that the game version is compatible
 - Verify you built for the correct architecture
 - Look for error logs in the game directory
@@ -838,7 +874,7 @@ After your mod is added to the registry, you can request "Verified" status by de
 
 ### Linux: Library not found
 
-- Check for missing shared library dependencies (`ldd bmod.so`)
+- Check for missing shared library dependencies (`ldd mymod.so`)
 - Consider static linking for fewer dependencies
 - Build on an older distro for broader compatibility
 
@@ -871,15 +907,15 @@ mod.json minimum:
   "version": "X.X.X",
   "type": "dll",
   "files": [
-    { "name": "bmod.dll", "path": "...release URL...", "platform": "windows" },
-    { "name": "bmod.dylib", "path": "...release URL...", "platform": "macos" },
-    { "name": "bmod.so", "path": "...release URL...", "platform": "linux" }
+    { "name": "mymod.dll", "path": "...release URL...", "platform": "windows" },
+    { "name": "mymod.dylib", "path": "...release URL...", "platform": "macos" },
+    { "name": "mymod.so", "path": "...release URL...", "platform": "linux" }
   ]
 }
 
-Mod slots: bmod, cmod, dmod, emod, fmod (amod is RESERVED)
+Library filename: yours to choose. One folder per mod, no slots, no limit.
 Extensions by platform: .dll (Windows), .dylib (macOS), .so (Linux)
-Note: Launcher may rename your file to manage multiple mods
+Note: add "entry" if you ship more than one library for a platform
 
 Release workflow:
 1. Update code and mod.json version
